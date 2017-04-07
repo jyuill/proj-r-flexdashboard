@@ -1,0 +1,43 @@
+---
+title: "Flex Test 1"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(ggplot2)
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+mt <- mtcars
+mt$cars <- row.names(mt)
+row.names(mt) <- c(1:nrow(mt))
+
+ggplot(mt, aes(x=disp, y=mpg))+geom_point()+
+  facet_grid(.~gear)
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+library(highcharter)
+
+```
+
+### Chart C
+
+```{r}
+
+```
+
