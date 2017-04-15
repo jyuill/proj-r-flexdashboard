@@ -9,12 +9,14 @@ output:
 ```{r setup, include=FALSE}
 library(flexdashboard)
 library(ggplot2)
+
+## layout reference: http://rmarkdown.rstudio.com/flexdashboard/layouts.html
 ```
 
 Column {data-width=650}
 -----------------------------------------------------------------------
 
-### Chart A
+### Chart A - ggplot2
 
 ```{r}
 mt <- mtcars
@@ -28,16 +30,20 @@ ggplot(mt, aes(x=disp, y=mpg))+geom_point()+
 Column {data-width=350}
 -----------------------------------------------------------------------
 
-### Chart B
+### Chart B - highcharter
 
 ```{r}
 library(highcharter)
-
+hchart(mt, "scatter", hcaes(x = disp, y = mpg, group = gear))
 ```
 
-### Chart C
+### Chart C - rCharts
 
-```{r}
+```{r, results='asis'}
+options(RCHART_WIDTH = 480, RCHART_HEIGHT = 400)
+library(rCharts)
+p1 <- rPlot(data=mt, mpg ~ disp | gear, color='gear', type='point')
+p1$print(include_assets=T)
 
 ```
 

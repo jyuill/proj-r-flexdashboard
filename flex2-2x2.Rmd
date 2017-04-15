@@ -1,0 +1,60 @@
+---
+title: "Flex Test 2: 2x2 layout with different chart libraries"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(ggplot2)
+
+
+## layout reference: http://rmarkdown.rstudio.com/flexdashboard/layouts.html
+```
+
+Row 
+-----------------------------------------------------------------------
+
+### Chart A - ggplot2 (facets, format flexibility, dynamic resizing, no tooltips)
+
+```{r}
+mt <- mtcars
+mt$cars <- row.names(mt)
+row.names(mt) <- c(1:nrow(mt))
+
+ggplot(mt, aes(x=disp, y=mpg))+geom_point()+
+  facet_grid(.~gear)
+```
+
+
+### Chart B - highcharter (tooltips, dynamic resize, no facets)
+
+```{r}
+library(highcharter)
+hchart(mt, "scatter", hcaes(x = disp, y = mpg, group = gear))
+```
+
+Row
+-----------------------------------------------------------------------
+
+
+### Chart C - rCharts (tooltips, facets, no dynamic resizing)
+
+```{r, results='asis'}
+#options(RCHART_WIDTH = 480, RCHART_HEIGHT = 400)
+library(rCharts)
+p1 <- rPlot(data=mt, mpg ~ disp | gear, color='gear', type='point')
+p1$print(include_assets=T)
+
+```
+
+### Chard D - ggVis (tooltips require shiny, no facets, no dynamic resize)
+
+```{r}
+library(ggvis)
+mt %>% ggvis(x=~ disp, y=~mpg, fill=~factor(gear)) %>% layer_points() %>%
+  add_tooltip(function(df) paste("disp: ",df$disp,", mpg: ",df$mpg, sep=""))
+
+```
+
