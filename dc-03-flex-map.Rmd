@@ -1,0 +1,59 @@
+---
+title: "SF Bay Bikeshare"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(scales)
+library(leaflet)
+
+
+## get data
+trips_df <- read_csv('https://assets.datacamp.com/production/repositories/1448/datasets/1f12031000b09ad096880bceb61f6ca2fd95e2eb/sanfran_bikeshare_joined_oneday.csv')
+
+
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### MAP
+
+```{r}
+
+leaflet() %>%
+  addTiles() %>%
+  addMarkers(lat=trips_df$start_latitude, lng=trips_df$start_longitude)
+
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### # of Trips
+
+```{r}
+num_trips <- nrow(trips_df)
+
+valueBox(prettyNum(num_trips, big.mark=','),
+         href='#trends')
+
+```
+
+### Trips by Duration
+
+```{r}
+
+#trips_df %>% mutate(dur_min=duration_sec/60) %>% ggplot(aes(x=dur_min))+geom_histogram()
+
+trips_df %>% group_by(start_station_name) %>% summarize(trips=n()) %>% 
+  slice_max(order_by=trips, n=10) %>% ggplot(aes(x=start_station_name, y=trips))+geom_col()+
+  coord_flip()
+
+```
+
