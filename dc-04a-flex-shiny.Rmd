@@ -1,0 +1,129 @@
+---
+title: "Flex + Shiny with SF Bikeshare Data"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(leaflet)
+library(DT)
+library(lubridate)
+library(plotly)
+
+## get data
+trips_df <- read_csv('https://assets.datacamp.com/production/repositories/1448/datasets/1f12031000b09ad096880bceb61f6ca2fd95e2eb/sanfran_bikeshare_joined_oneday.csv') %>%
+  mutate(duration_min = duration_sec / 60,
+         start_hour = hour(start_date)) %>%
+  filter(duration_min <= 8 * 60) # remove trips longer than 8 hours as suspicious data quality
+
+
+
+```
+
+Column {data-width=200, .sidebar}
+------------------------------------------------------------------
+
+```{r}
+## add slider input for start times
+sliderInput(inputId='start_slider',
+            label='Select trip start times (hr): ',
+            min=0,
+            max=24,
+            value=c(7,10),
+            step=1,
+            dragRange=TRUE)
+
+## slider input for binwidth
+sliderInput(inputId='bin_slider',
+            label='Select binwidth for duration: ',
+            min=1,
+            max=10,
+            value=5,
+            step=1)
+
+## add reacitve function to change data based on input
+show_trips_df <- reactive({
+  trips_df %>% 
+    filter(start_hour >= input$start_slider[1] &
+             start_hour <= input$start_slider[2])
+})
+
+```
+
+
+Column {data-width=550}
+-----------------------------------------------------------------------
+
+### Origins
+
+```{r}
+## render + reference to reactive function (show_trips_df() )
+## for map to adjust to input
+
+renderLeaflet({
+  show_trips_df() %>%
+    rename(latitude = start_latitude,
+           longitude = start_longitude) %>%
+    group_by(start_station_id, latitude, longitude) %>%
+    count() %>%
+    leaflet() %>%
+    addTiles() %>%
+    addCircles(radius = ~n)
+})
+  
+
+
+```
+
+
+
+Column {data-width=250}
+-----------------------------------------------------------------------
+
+### Total Trips
+
+```{r}
+## render + reference to reactive function to respond to input
+
+renderValueBox({
+  valueBox(prettyNum(show_trips_df() %>%
+                     nrow(), big.mark = ','), 
+         icon = 'fa-bicycle')
+})
+
+```
+
+### Trips by Start Time
+
+```{r}
+renderPlot({
+  show_trips_df() %>% mutate(
+    start_hr=hour(start_date)
+  ) %>%
+    ggplot(aes(x=start_hr))+geom_histogram()
+})
+```
+
+
+### Trips by Duration
+
+```{r}
+## render + reference to reactive function to respond to input
+
+renderPlot({
+  show_trips_df() %>%
+    ggplot(aes(x = duration_min)) +
+    theme_bw() +
+    xlab('Trip Duration (min) \n') +
+    ylab('# trips') +
+    geom_histogram(binwidth=input$bin_slider) 
+})
+
+
+```
+
